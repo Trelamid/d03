@@ -68,7 +68,13 @@ public class ennemyScript : MonoBehaviour {
 					return ;
 				}
 			}
-			Debug.Log ("Victoire !");
+			Win();
 		}
+	}
+
+	void Win()
+	{
+		Debug.Log ("Victoire !");
+		GameObject.Find("GameManager").GetComponent<gameManager>().win = true;
 	}
 }

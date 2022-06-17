@@ -17,6 +17,12 @@ public class towerScript : MonoBehaviour {
 	public float range = 1;
 	public GameObject upgrade;
 	public GameObject downgrade;
+
+	public GameObject upgradeUI;
+	private Camera _camera;
+
+	private GameObject UI;
+	private GameObject canvas;
 	
 	void Update () {
 		if (Time.time > nextShot) {
@@ -36,6 +42,22 @@ public class towerScript : MonoBehaviour {
 
 	void Start() {
 		GetComponent<CircleCollider2D>().radius = range;
+		_camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+		canvas = GameObject.FindWithTag("UI");
+	}
+
+	public void OnClick()
+	{
+		if(UI)
+			return;
+		UI = Instantiate(upgradeUI,canvas.transform.GetChild(0).transform);
+		UI.transform.position = _camera.WorldToScreenPoint(transform.position); 
+		var auf = UI.GetComponent<TowerUI>();
+		Debug.Log(transform.position);
+		auf.downgrade = downgrade;
+		auf.upgrade = upgrade;
+		auf.thisTower = this.gameObject;
+		// Destroy();
 	}
 
 	void OnTriggerEnter2D(Collider2D bot) {

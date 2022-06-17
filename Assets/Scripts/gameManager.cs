@@ -2,6 +2,8 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
+using Unity.VisualScripting.FullSerializer;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class gameManager : MonoBehaviour {
@@ -25,35 +27,67 @@ public class gameManager : MonoBehaviour {
 	public static gameManager gm;
 	private bool paused;
 	
-	public TextMeshProUGUI textEnergy;
-	public TextMeshProUGUI textHP;
+	public Text textEnergy;
+	public Text textHP;
+	
+	public TextMeshProUGUI gameSpeedText;
 
 	public GameObject pauseUI;
-	
-	
-	
+
+	public bool win;
+	public GameObject gameoverUI;
+	public GameObject gameoverUIFon;
+	public GameObject gameoverUIWindow;
+	public GameObject gameoverRangeUI;
+	public GameObject gameoverScoreUI;
+	public GameObject gameoverButtonWinUI;
+	public GameObject gameoverButtonFailUI;
+
+	private Camera _camera;
 
 	//Singleton basique  : Voir unity design patterns sur google.
 	void Awake () {
 		if (gm == null)
 			gm = this;
 	}
+	
+	void Start() {
+		Time.timeScale = 1;
+		playerHp = playerMaxHp;
+		playerEnergy = playerStartEnergy;
 
+		_camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+		// textEnergy = GameObject.Find("EnergyPlayer").GetComponent<TextMeshPro>();
+	}
 	private void Update()
 	{
-		textEnergy.text = playerEnergy.ToString();
-		textHP.text = playerHp.ToString();
+		if (Input.GetMouseButtonDown(0))
+		{
+			var obj = Physics2D.OverlapPoint(_camera.ScreenToWorldPoint(Input.mousePosition));
+			if(obj)
+				Debug.Log(obj.gameObject);
+			if (obj && obj.gameObject.tag == "tower")
+			{
+				obj.gameObject.GetComponentInParent<towerScript>().OnClick();
+			}
+		}
+		
+		if (win)
+		{
+			myGameOver();
+		}
+		
+		if (textEnergy)
+			textEnergy.text = playerEnergy.ToString();
+		
+		if(textHP)
+			textHP.text = playerHp.ToString();
+		
 		if(playerHp <= 0)
 			gameOver();
 		
 		if(Input.GetKeyDown(KeyCode.Escape))
 			pause();
-	}
-
-	void Start() {
-		Time.timeScale = 1;
-		playerHp = playerMaxHp;
-		playerEnergy = playerStartEnergy;
 	}
 
 	//Pour mettre le jeu en pause
@@ -77,6 +111,10 @@ public class gameManager : MonoBehaviour {
 	//Pour changer la vitesse de base du jeu
 	public void changeSpeed(float speed) {
 		Time.timeScale = speed;
+		if (speed == 0)
+			gameSpeedText.text = "Pause";
+		else
+			gameSpeedText.text = "Speed " + speed.ToString() + "x";
 	}
 
 	//Le joueur perd de la vie
@@ -92,5 +130,61 @@ public class gameManager : MonoBehaviour {
 	public void gameOver() {
 		Time.timeScale = 0;
 		Debug.Log ("Game Over");
+		myGameOver();
+	}
+
+	public void myGameOver()
+	{
+		gameoverUI.SetActive(true);
+		gameoverScoreUI.GetComponent<TextMeshProUGUI>().text = score.ToString();
+
+		if (win)
+		{
+			gameoverButtonFailUI.SetActive(false);
+			if (SceneManager.GetActiveScene().buildIndex == 5)
+			{
+				gameoverButtonWinUI.SetActive(false);
+				gameoverUIWindow.GetComponent<TextMeshProUGUI>().text = "You win!";
+			}
+			else
+			{
+				gameoverButtonWinUI.SetActive(true);
+				gameoverUIFon.GetComponent<Image>().enabled = false;
+				gameoverUIWindow.GetComponent<TextMeshProUGUI>().text = "Good!";
+			}
+		}
+		else
+		{
+			gameoverUIWindow.GetComponent<TextMeshProUGUI>().text = "You lose!";
+			gameoverUIFon.GetComponent<Image>().enabled = false;
+			gameoverButtonWinUI.SetActive(false);
+			gameoverButtonFailUI.SetActive(true);
+		}
+		
+		if (playerEnergy > 500 && playerHp == playerMaxHp)
+		{
+			gameoverRangeUI.GetComponent<TextMeshProUGUI>().text = "A";
+			
+		}
+		else if(playerEnergy > 400 && playerHp > 15)
+		{
+			gameoverRangeUI.GetComponent<TextMeshProUGUI>().text = "B";
+
+		}
+		else if(playerEnergy > 300 && playerHp > 10)
+		{
+			gameoverRangeUI.GetComponent<TextMeshProUGUI>().text = "C";
+
+		}
+		else if(playerEnergy > 100 && playerHp > 5)
+		{
+			gameoverRangeUI.GetComponent<TextMeshProUGUI>().text = "D";
+
+		}
+		else
+		{
+			gameoverRangeUI.GetComponent<TextMeshProUGUI>().text = "E";
+
+		}
 	}
 }
